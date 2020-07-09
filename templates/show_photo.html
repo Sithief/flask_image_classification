@@ -4,12 +4,17 @@
 {% endblock %}
 {% block body %}
 <div class="content">
-    <img src="{{ photo.url }}" height="640">
-    <form action="/add_tag/{{ photo.id }}" method="POST">
-        <input type="submit" value="Furry" name="tag">
-        <input type="submit" value="Anime" name="tag">
-        <input type="submit" value="Photo" name="tag">
-        <input type="submit" value="Other" name="tag">
-    </form>
+    {% if photo %}
+        <img src="{{ photo.url }}" height="640">
+        <form action="/add_tag/{{ photo.id }}" method="POST">
+            <input type="submit" value="Furry" name="tag">
+            <input type="submit" value="Anime" name="tag">
+            <input type="submit" value="Photo" name="tag">
+            <input type="submit" value="Other" name="tag">
+        </form>
+    {% else %}
+        <H2> Unclassified photos not found </H2>
+        <a href="/"> Home </a>
+    {% endif %}
 </div>
 {% endblock %}

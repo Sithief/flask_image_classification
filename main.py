@@ -1,19 +1,7 @@
-from flask import Flask, render_template, url_for, request, redirect
-from flask_sqlalchemy import SQLAlchemy
-
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data.db'
-db = SQLAlchemy(app)
-
-
-class Photos(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    url = db.Column(db.Text(200), nullable=False)
-    tag = db.Column(db.Text(200))
-    update_time = db.Column(db.Integer)
-
-    def __repr__(self):
-        return f"<Photo {self.id}>"
+from flask import render_template, request, redirect
+import time
+from database import Photos
+from __init__ import *
 
 
 @app.route('/', methods=['GET'])
@@ -26,7 +14,7 @@ def index():
 def add_tag(photo_id):
     photo = Photos.query.get_or_404(photo_id)
     photo.tag = request.form['tag']
-
+    photo.update_time = int(time.time())
     try:
         db.session.commit()
         return redirect('/show_photo')
