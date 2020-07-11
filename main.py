@@ -22,6 +22,25 @@ def add_tag(photo_id):
         return 'error'
 
 
+@app.route('/register')
+def register():
+    client_id = CONF.get("VK", "client_id")
+    scope = CONF.get("VK", "scope")
+    uri = CONF.get("VK", "uri")
+    url = f'https://oauth.vk.com/authorize?client_id={client_id}&redirect_uri={uri}&scope={scope}' \
+          f'&display=page&response_type=token&revoke=1'
+    return redirect(url)
+
+
+@app.route('/confirm_register')
+def confirm_register():
+    access_token = request.args.get('access_token')
+    if not access_token:
+        return render_template('register.html')
+    else:
+        return access_token
+
+
 @app.route('/delete/<int:photo_id>')
 def delete(photo_id):
     task = Photos.query.get_or_404(photo_id)

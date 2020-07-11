@@ -1,9 +1,8 @@
 import requests
 import time
 import logging
-import configparser
-import os
 import database
+from __init__ import *
 
 
 class VkApi:
@@ -96,16 +95,6 @@ def get_photos_urls(photos):
     return urls
 
 
-def use_config(path=None):
-    if not path:
-        current_path = os.path.dirname(os.path.abspath(__file__))
-        path = os.path.join(current_path, 'config.cfg')
-    conf = configparser.ConfigParser()
-    conf.read(path, encoding='utf-8')
-    vk = VkApi(conf.get('VK', 'token', fallback='no confirm'))
-    return vk
-
-
 def update_users(users):
     new_users_count = 0
     for user_id in users:
@@ -131,7 +120,7 @@ def update_photos(photos):
 
 
 if __name__ == "__main__":
-    vk_api = use_config()
+    vk_api = VkApi(CONF.get('VK', 'token', fallback='no confirm'))
     friends = vk_api.get_friends()
     # print(f'find {update_users(friends)} new users')
     user_to_update = database.Users.query.order_by(database.Users.update_time).first()
