@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block head %}
+<title>Gallery</title>
+{% endblock %}
+{% block body %}
+<div class="content">
+    {% for tag in tag_list %}
+        {% if tag.count > 0%}
+            <a class="buttons" href='/gallery?tag={{ tag.tag }}' >{{ tag.tag }} ({{ tag.count }})</a>
+        {% endif %}
+    {% endfor %}
+    <br>
+    {% for photo in photos %}
+        <p><a href="/show_photo?photo_id={{ photo.id }}">
+            <img src="{{ photo.url }}"></a></p><br>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,6 +1,7 @@
 from flask import render_template, request, redirect
 import time
 from database import Photos
+import photos_updater
 from __init__ import *
 
 
@@ -54,8 +55,37 @@ def delete(photo_id):
 
 @app.route('/show_photo')
 def show_photo():
-    photo = Photos.query.filter_by(tag=None).first()
+    photo_id = request.args.get('photo_id')
+    if photo_id:
+        photo = Photos.query.get_or_404(photo_id)
+    else:
+        photo = Photos.query.filter_by(tag=None).first()
+        if photo is None:
+            token = CONF.get('VK', 'token', fallback=None)
+            if token:
+                vk_api = photos_updater.VkApi(token)
+                new_data = photos_updater.get_new_data(vk_api)
+                print('new_data', new_data)
+                return redirect('/show_photo')
     return render_template('show_photo.html', photo=photo)
+
+
+@app.route('/gallery')
+def gallery():
+    tags = db.session.query(func.count(Photos.tag).label('count'), Photos.tag).group_by(Photos.tag).all()
+    current_tag = request.args.get('tag')
+    if current_tag:
+        photos = Photos.query.filter(Photos.update_time > 0, Photos.tag == current_tag)\
+            .order_by(Photos.update_time.desc())\
+            .limit(100).all()
+    else:
+        photos = Photos.query.filter(Photos.update_time > 0) \
+            .order_by(Photos.update_time.desc()) \
+            .limit(100).all()
+
+    # for tag in tags:
+    #     print(tag.tag, tag.count)
+    return render_template('gallery.html', tag_list=tags, photos=photos)
 
 
 if __name__ == "__main__":

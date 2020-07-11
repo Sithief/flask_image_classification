@@ -119,16 +119,29 @@ def update_photos(photos):
     return new_photos_count
 
 
-if __name__ == "__main__":
-    vk_api = VkApi(CONF.get('VK', 'token', fallback='no confirm'))
-    friends = vk_api.get_friends()
-    # print(f'find {update_users(friends)} new users')
+def get_new_data(vk, photos_count=50):
+    friends = vk.get_friends()
+    new_users = update_users(friends)
     user_to_update = database.Users.query.order_by(database.Users.update_time).first()
-    user_photos = vk_api.get_photos(user_to_update.id)
+    user_photos = vk.get_photos(user_to_update.id, count=photos_count)
     photos_urls = get_photos_urls(user_photos)
+    new_photos = update_photos(photos_urls)
     user_to_update.update_time = int(time.time())
     database.db.session.commit()
-    print(f'find {update_photos(photos_urls)} new photos')
+    return {'users': new_users, 'photos': new_photos}
+
+
+if __name__ == "__main__":
+    pass
+    # vk_api = VkApi(CONF.get('VK', 'token', fallback='no confirm'))
+    # friends = vk_api.get_friends()
+    # print(f'find {update_users(friends)} new users')
+    # user_to_update = database.Users.query.order_by(database.Users.update_time).first()
+    # user_photos = vk_api.get_photos(user_to_update.id)
+    # photos_urls = get_photos_urls(user_photos)
+    # user_to_update.update_time = int(time.time())
+    # database.db.session.commit()
+    # print(f'find {update_photos(photos_urls)} new photos')
     # for fr in friends:
     #     user_photos = vk_api.get_photos(fr)
     #     user_photos = get_photos_urls(user_photos)

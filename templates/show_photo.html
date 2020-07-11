@@ -4,17 +4,30 @@
 {% endblock %}
 {% block body %}
 <div class="content">
-    {% if photo %}
-        <img src="{{ photo.url }}" height="640">
-        <form action="/add_tag/{{ photo.id }}" method="POST">
+    <img src="{{ photo.url }}" height="640">
+    <form action="/add_tag/{{ photo.id }}" method="POST">
+        <div>
             <input type="submit" value="Furry" name="tag">
+            рисунки и фото с животными, особенно антропоморфными <a href="/gallery?tag=Furry">Примеры</a>
+        </div>
+        <div>
             <input type="submit" value="Anime" name="tag">
+            рисунки с людьми, кроме реализма, особенно похожие на стиль в аниме
+            <a href="/gallery?tag=Anime">Примеры</a>
+        </div>
+        <div>
             <input type="submit" value="Photo" name="tag">
+            фото с людьми, особенно те, где хорошо видно лицо
+            <a href="/gallery?tag=Photo">Примеры</a>
+        </div>
+        <div>
             <input type="submit" value="Other" name="tag">
-        </form>
-    {% else %}
-        <H2> Unclassified photos not found </H2>
-        <a href="/"> Home </a>
-    {% endif %}
+            то, что не подходит к остальным категориям
+            <a href="/gallery?tag=Other">Примеры</a>
+        </div>
+    </form>
+</div>
+<div>
+    <a href=""></a>
 </div>
 {% endblock %}
