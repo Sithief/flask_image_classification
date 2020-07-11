@@ -1,7 +1,10 @@
-from flask import render_template, request, redirect
+from flask import render_template, request, redirect, send_file
 import time
+import os
+import io
 from database import Photos
 import photos_updater
+import downloader
 from __init__ import *
 
 
@@ -83,9 +86,25 @@ def gallery():
             .order_by(Photos.update_time.desc()) \
             .limit(100).all()
 
-    # for tag in tags:
-    #     print(tag.tag, tag.count)
     return render_template('gallery.html', tag_list=tags, photos=photos)
+
+
+@app.route('/download/<tag>', methods=['GET', 'POST'])
+def download(tag):
+    dir_name = os.path.join(CONF.get('SERVER', 'files_dir'), hex(int(time.time()))[2:])
+    max_count = min(300, request.args.get('count', 100))
+    photos = Photos.query.filter(Photos.tag == tag)\
+        .order_by(func.random()).limit(max_count).all()
+    urls = [ph.url for ph in photos]
+    downloader.main(urls, dir_name)
+    zip_file = downloader.zipdir(dir_name)
+
+    return_data = io.BytesIO()
+    with open(zip_file, 'rb') as fo:
+        return_data.write(fo.read())
+    return_data.seek(0)
+    os.remove(zip_file)
+    return send_file(return_data, attachment_filename='files.zip')
 
 
 if __name__ == "__main__":
