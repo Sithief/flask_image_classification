@@ -62,7 +62,7 @@ def show_photo():
     if photo_id:
         photo = Photos.query.get_or_404(photo_id)
     else:
-        photo = Photos.query.filter_by(tag=None).first()
+        photo = Photos.query.filter_by(tag=None).order_by(func.random()).first()
         if photo is None:
             token = CONF.get('VK', 'token', fallback=None)
             if token:
@@ -89,22 +89,35 @@ def gallery():
     return render_template('gallery.html', tag_list=tags, photos=photos)
 
 
-@app.route('/download/<tag>', methods=['GET', 'POST'])
-def download(tag):
-    dir_name = os.path.join(CONF.get('SERVER', 'files_dir'), hex(int(time.time()))[2:])
-    max_count = min(300, request.args.get('count', 100))
-    photos = Photos.query.filter(Photos.tag == tag)\
-        .order_by(func.random()).limit(max_count).all()
-    urls = [ph.url for ph in photos]
-    downloader.main(urls, dir_name)
-    zip_file = downloader.zipdir(dir_name)
+@app.route('/download', methods=['GET', 'POST'])
+def download():
+    if request.method == "POST":
+        dir_name = os.path.join(CONF.get('SERVER', 'files_dir'), hex(int(time.time()))[2:])
+        if request.form.get('img_height') and request.form.get('img_width'):
+            img_size = (min(640, int(request.form.get('img_height'))),
+                        min(640, int(request.form.get('img_width'))))
+            max_count = min(5000, int(request.form.get('max_count', 100)))
+        else:
+            img_size = None
+            max_count = min(1000, int(request.form.get('max_count', 100)))
+        tag = request.form.get('tag', 100)
 
-    return_data = io.BytesIO()
-    with open(zip_file, 'rb') as fo:
-        return_data.write(fo.read())
-    return_data.seek(0)
-    os.remove(zip_file)
-    return send_file(return_data, attachment_filename='files.zip')
+        photos = Photos.query.filter(Photos.tag == tag)\
+            .order_by(Photos.update_time.desc())\
+            .limit(max_count).all()
+        urls = [ph.url for ph in photos]
+        downloader.main(urls, dir_name, img_size)
+        zip_file = downloader.zipdir(dir_name)
+
+        return_data = io.BytesIO()
+        with open(zip_file, 'rb') as fo:
+            return_data.write(fo.read())
+        return_data.seek(0)
+        os.remove(zip_file)
+        return send_file(return_data, attachment_filename='files.zip')
+    else:
+        tags = db.session.query(func.count(Photos.tag).label('count'), Photos.tag).group_by(Photos.tag).all()
+        return render_template('download.html', tag_list=tags)
 
 
 if __name__ == "__main__":

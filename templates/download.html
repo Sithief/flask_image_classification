@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block head %}
+<title>Photo</title>
+{% endblock %}
+{% block body %}
+<div class="content">
+    <form action="/download" method="POST">
+        {% for tag in tag_list %}
+            {% if tag.count > 0%}
+                <input type="radio" name="tag" value="{{ tag.tag }}" id="{{ tag.tag }}" checked>
+                <label for="{{ tag.tag }}">{{ tag.tag }} ({{ tag.count }})</label><br>
+            {% endif %}
+        {% endfor %}
+        <label for="max_count">images count</label>
+        <input type="number" value="100" name="max_count" id="max_count"><br>
+        <label for="img_width">images resize</label>
+	    <input type="number" placeholder="width" name="img_width" id="img_width">
+        <label for="img_height">x</label>
+        <input type="number" placeholder="height" name="img_height" id="img_height"><br>
+        <input type="submit" value="Download">
+    </form>
+</div>
+<div>
+    <a href=""></a>
+</div>
+{% endblock %}
