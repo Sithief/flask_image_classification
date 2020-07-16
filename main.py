@@ -1,4 +1,4 @@
-from flask import render_template, request, redirect, send_file
+from flask import render_template, request, redirect, send_file, url_for
 import time
 import os
 import io
@@ -63,13 +63,17 @@ def show_photo():
         photo = Photos.query.get_or_404(photo_id)
     else:
         photo = Photos.query.filter_by(tag=None).order_by(func.random()).first()
-        if photo is None:
+        while photo is None:
             token = CONF.get('VK', 'token', fallback=None)
             if token:
                 vk_api = photos_updater.VkApi(token)
                 new_data = photos_updater.get_new_data(vk_api)
                 print('new_data', new_data)
-                return redirect('/show_photo')
+            else:
+                return 'no vk_api token'
+            photo = Photos.query.filter_by(tag=None).order_by(func.random()).first()
+        redirect_url = url_for('show_photo', photo_id=photo.id)
+        return redirect(redirect_url)
     return render_template('show_photo.html', photo=photo)
 
 

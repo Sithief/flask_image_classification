@@ -1,10 +1,13 @@
 {% extends 'base.html' %}
 {% block head %}
-<title> jinga Title</title>
+<title>Image classification</title>
 {% endblock %}
 {% block body %}
 <div class="content">
-    <H1>Title</H1>
-    <a href="/show_photo">show photo</a>
+    <H3>Этот сайт предназначен для ручной классификации изображений по категориям, для дальнейшего обучения нейронных сетей</H3>
+    <div>Изображения получены из альбомов "изображения со страницы пользователя" потому могут содержать в том числе и контент 18+</div>
+    <a href="/show_photo">Начать классификацию</a><br>
+    <a href="/gallery">Просмотреть уже классифицированные</a><br>
+    <a href="/download">Скачать данные для обучения</a><br>
 </div>
 {% endblock %}

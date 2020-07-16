@@ -5,6 +5,7 @@
 {% block body %}
 <div class="content">
     <img src="{{ photo.url }}" height="640">
+    <h3>Выберите подходящую категорию для этого изображения. </h3>
     <form action="/add_tag/{{ photo.id }}" method="POST">
         <div>
             <input type="submit" value="Furry" name="tag">
