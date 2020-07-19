@@ -1,4 +1,6 @@
-from flask import render_template, request, redirect, send_file, url_for
+from flask import render_template, request, redirect, url_for, Response
+from werkzeug.wsgi import FileWrapper
+from sqlalchemy.sql import func
 import time
 import os
 import io
@@ -10,8 +12,7 @@ from __init__ import *
 
 @app.route('/', methods=['GET'])
 def index():
-    tasks = Photos.query.order_by(Photos.id).all()
-    return render_template('index.html', tasks=tasks)
+    return render_template('index.html')
 
 
 @app.route('/add_tag/<int:photo_id>', methods=["POST"])
@@ -118,7 +119,8 @@ def download():
             return_data.write(fo.read())
         return_data.seek(0)
         os.remove(zip_file)
-        return send_file(return_data, attachment_filename='files.zip')
+        wrapped_data = FileWrapper(return_data)
+        return Response(wrapped_data, mimetype="application/zip", direct_passthrough=True)
     else:
         tags = db.session.query(func.count(Photos.tag).label('count'), Photos.tag).group_by(Photos.tag).all()
         return render_template('download.html', tag_list=tags)

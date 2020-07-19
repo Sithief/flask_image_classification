@@ -1,6 +1,8 @@
 import asyncio
 import aiohttp
+import requests
 from asyncio_pool import AioPool
+from multiprocessing.dummy import Pool as ThreadPool
 import time
 import os
 import io
@@ -21,7 +23,7 @@ class DownloadingImage:
         self.size = size
 
 
-async def get_url(image):
+async def async_get_url(image):
     if not os.path.exists(image.filename):
         try:
             async with image.session.get(image.url) as response:
@@ -39,12 +41,39 @@ async def get_url(image):
             print(f'\nerror: {e}, {image.filename}')
 
 
-async def download(images):
+async def async_download(images):
     pool = AioPool(size=threads_count)
     async with aiohttp.ClientSession() as session:
         for img in images:
             img.session = session
-        await pool.map(get_url, images)
+        await pool.map(async_get_url, images)
+
+
+def thread_get_url(image):
+    if not os.path.exists(image.filename):
+        try:
+            response = image.session.get(image.url)
+            if response.ok:
+                with io.BytesIO() as img_buffer:
+                    img_buffer.write(response.content)
+                    i = Image.open(img_buffer)
+                    if image.size:
+                        i = i.resize(image.size, Image.LANCZOS)
+                    i.save(image.filename, optimize=True)
+            else:
+                print(f'download: {response.status}')
+        except Exception as e:
+            print(f'\nerror: {e}, {image.filename}')
+
+
+def thread_download(images):
+    session = requests.Session()
+    for img in images:
+        img.session = session
+    pool = ThreadPool(threads_count)
+    pool.map(thread_get_url, images)
+    pool.close()
+    pool.join()
 
 
 def main(urls, folder='', size=(224, 224)):
@@ -56,10 +85,11 @@ def main(urls, folder='', size=(224, 224)):
         file_name = img_url.split('?')[0].rsplit('/', 1)[1]
         images.append(DownloadingImage(url=img_url, filename=os.path.join(folder, file_name), img_id=img_id, size=size))
 
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    loop.run_until_complete(download(images))
-    loop.close()
+    # loop = asyncio.new_event_loop()
+    # asyncio.set_event_loop(loop)
+    # loop.run_until_complete(async_download(images))
+    # loop.close()
+    thread_download(images)
     print(f'download in {round(time.time() - start_time, 2)} seconds')
 
 
@@ -85,5 +115,5 @@ if __name__ == '__main__':
                  'https://sun1-98.userapi.com/c845324/v845324360/1ad7e6/XRAoJdLYKXA.jpg',
                  'https://sun9-64.userapi.com/c626121/v626121740/5b489/HqWk1mJq6Sc.jpg']
     main(urls=test_urls, folder='G:\\tmp\\imgs')
-    zipdir('G:\\tmp\\imgs')
+    # zipdir('G:\\tmp\\imgs')
 
